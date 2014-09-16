@@ -1,0 +1,4 @@
+.vagrant
+tmp
+mount/data
+mount/tmp

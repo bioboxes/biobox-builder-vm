@@ -1,0 +1,37 @@
+#!/bin/bash
+
+set -o errexit
+
+if [[ -z "$1" ]]; then
+  printf "Please supply an image. For example:\n\n    $ test_image nucleotides/velvet default\n\n" >&2
+  exit 1
+fi
+
+if [[ -z "$2" ]]; then
+  printf "Please supply a proc. For example:\n\n    $ test_image nucleotides/velvet default\n\n" >&2
+  exit 1
+fi
+
+set -o xtrace
+set -o nounset
+
+IMAGE=$1
+PROC=$2
+IN_DIR=${HOME}/data
+OUT_DIR=$(mktemp -d)
+CONTAINER_FILE="$(mktemp -d)/cidfile"
+
+finish(){
+  docker rm $(cat ${CONTAINER_FILE})
+  echo ${OUT_DIR}
+}
+trap finish EXIT
+
+docker run \
+  --volume ${IN_DIR}:/inputs:ro \
+  --volume ${OUT_DIR}:/outputs:rw \
+  --cidfile="${CONTAINER_FILE}" \
+  ${IMAGE} \
+  ${PROC} \
+  /inputs/reads.fq.gz \
+  /outputs
