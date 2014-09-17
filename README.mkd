@@ -1,14 +1,7 @@
 This project provides a virtual machine and associated scripts to help test
 your assembler Docker containers as you are building them.
 
-## Quick Start
-
-    ./script/bootstrap
-    ./script/init
-    make ssh
-    test_image nucleotides/velvet default
-
-## Installation
+## Requirements
 
 This project requires that Vagrant and Virtualbox are installed on your
 machine. These are the download links for [vagrant][1] and [virtualbox][2].
@@ -18,6 +11,13 @@ wget.
 
 [1]: https://www.vagrantup.com/downloads.html
 [2]: https://www.virtualbox.org/wiki/Downloads
+
+## Quick Start
+
+    ./script/bootstrap
+    ./script/init
+    make ssh
+    test_image nucleotides/velvet default
 
 ## Boostrapping test data
 
