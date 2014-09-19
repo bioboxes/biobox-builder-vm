@@ -22,12 +22,31 @@ OUT_DIR=$(mktemp -d)
 CONTAINER_FILE="$(mktemp -d)/cidfile"
 
 finish(){
+  docker stop $(cat ${CONTAINER_FILE})
   docker rm $(cat ${CONTAINER_FILE})
+  rm ${CONTAINER_FILE}
   echo ${OUT_DIR}
 }
 trap finish EXIT
 
+collect(){
+  local DST=${OUT_DIR}/cgroup/$(date +%s)
+  local MEM=/sys/fs/cgroup/memory/docker/$(cat ${CONTAINER_FILE})
+  local CPU=/sys/fs/cgroup/cpuacct/docker/$(cat ${CONTAINER_FILE})
+  local BIO=/sys/fs/cgroup/blkio/docker/$(cat ${CONTAINER_FILE})
+
+  mkdir -p ${DST}
+  cp ${MEM}/memory.max_usage_in_bytes ${DST}
+  cp ${MEM}/memory.usage_in_bytes ${DST}
+  cp ${MEM}/memory.stat ${DST}
+  cp ${CPU}/cpuacct.stat ${DST}
+  cp ${CPU}/cpuacct.usage ${DST}
+  cp ${CPU}/cpuacct.usage_percpu ${DST}
+  cp ${BIO}/blkio.io_service_bytes ${DST}
+}
+
 docker run \
+  --detach=true \
   --volume ${IN_DIR}:/inputs:ro \
   --volume ${OUT_DIR}:/outputs:rw \
   --cidfile="${CONTAINER_FILE}" \
@@ -35,3 +54,10 @@ docker run \
   ${PROC} \
   /inputs/reads.fq.gz \
   /outputs
+
+while [[ -e ${CONTAINER_FILE} ]]; do
+  collect
+  sleep 60
+done &
+
+docker wait $(cat ${CONTAINER_FILE})
