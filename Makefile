@@ -6,6 +6,9 @@ data_url := 'https://www.dropbox.com/s/hcquyvihmy0cpy7/reads.fq.xz?dl=1'
 
 all:
 
+mount/tmp:
+	mkdir -p $@
+
 #######################################
 #
 # Fetch data for testing images
@@ -23,7 +26,7 @@ mount/data/reads.fq.gz: $(tmp_dir)/reads.fq.xz
 	mkdir -p $(dir $@)
 	xzcat $< | gzip > $@
 
-bootstrap: mount/data/reads.fq.gz
+bootstrap: mount/data/reads.fq.gz mount/tmp
 
 #######################################
 #
