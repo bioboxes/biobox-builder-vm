@@ -4,4 +4,4 @@ set -o nounset
 
 CMD="make rsync"
 
-${CMD} && fswatch mount "clear && ${CMD}"
+${CMD} && fswatch-run mount "${CMD}"
