@@ -16,4 +16,12 @@ install_docker(){
   sudo service docker restart
 }
 
+create_user(){
+  local USER_NAME=workshop
+  sudo useradd ${USER_NAME} --groups admin --create-home --shell /bin/bash
+  echo ${USER_NAME}:${USER_NAME} | sudo chpasswd
+}
+
+
 install_docker
+create_user
