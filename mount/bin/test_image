@@ -17,7 +17,7 @@ set -o nounset
 
 IMAGE=$1
 PROC=$2
-IN_DIR=${HOME}/data
+IN_DIR=/opt/docker_workshop/data
 OUT_DIR=$(mktemp -d)
 CONTAINER_FILE="$(mktemp -d)/cidfile"
 

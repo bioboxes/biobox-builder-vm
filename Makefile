@@ -2,6 +2,10 @@ tmp_dir := tmp
 user    := vagrant@default
 ssh_cfg := tmp/.ssh-config
 
+mount_dir := /opt/docker_workshop/
+
+rsync := rsync -avz --exclude='.git/' -e "ssh -F $(ssh_cfg)"
+
 data_url := 'https://www.dropbox.com/s/hcquyvihmy0cpy7/reads.fq.xz?dl=1'
 
 all:
@@ -39,6 +43,7 @@ $(tmp_dir)/.instance:
 	vagrant up
 	touch $@
 
+
 up: $(tmp_dir)/.instance
 
 down:
@@ -58,11 +63,16 @@ $(ssh_cfg):
 	vagrant ssh-config | grep -v WARNING > $@
 	chmod 400 $@
 
+permissions: $(ssh_cfg)
+	ssh -F $(ssh_cfg) $(user) 'sudo mkdir -p $(mount_dir) && sudo chmod 770 $(mount_dir) && sudo chown vagrant:admin $(mount_dir)'
+
 rsync: $(ssh_cfg)
-	rsync -avz --exclude='.git/' -e "ssh -F $(ssh_cfg)" ./mount/* $(user):.
+	$(rsync) ./mount/bin  $(user):$(mount_dir)
+	$(rsync) ./mount/data $(user):$(mount_dir)
+	$(rsync) ./mount/tmp  $(user):.
 
 provision: rsync
-	ssh -F $(ssh_cfg) $(user) './bin/provision'
+	ssh -F $(ssh_cfg) $(user) '$(mount_dir)/bin/provision'
 
 # This task will launch and provision the instance
-init: up rsync provision
+init: up permissions rsync provision
