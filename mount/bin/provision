@@ -17,12 +17,8 @@ install_docker(){
 }
 
 create_user(){
-  local USER_NAME=workshop
-  sudo useradd ${USER_NAME} --groups admin,docker --create-home --shell /bin/bash
-  echo ${USER_NAME}:${USER_NAME} | sudo chpasswd
-  echo 'PATH="$PATH:/opt/docker_workshop/bin"' | sudo tee -a /home/${USER_NAME}/.bashrc
+  echo 'PATH="$PATH:/opt/docker_workshop/bin"' | sudo tee -a ${HOME}/.bashrc
 }
-
 
 install_docker
 create_user
