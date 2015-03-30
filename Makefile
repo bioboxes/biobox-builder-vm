@@ -6,7 +6,7 @@ mount_dir := /opt/docker_workshop/
 
 rsync := rsync -avz --exclude='.git/' -e "ssh -F $(ssh_cfg)"
 
-data_url := 'https://www.dropbox.com/s/hcquyvihmy0cpy7/reads.fq.xz?dl=1'
+data_url := 'https://www.dropbox.com/s/gcy0q3m2h67zxmr/reads.fq.xz?dl=0'
 
 all:
 
