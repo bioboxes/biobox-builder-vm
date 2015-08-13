@@ -1,155 +1,92 @@
 # Biobox builder helper virtual machine
 
-This project provides a virtual machine and associated scripts to help test
-your assembler Docker containers as you are building them.
+This project provides a virtual machine with Docker install and additional
+scripts to help you build and test your biobox Docker containers.
 
 ## Requirements
 
 This project requires that Vagrant and Virtualbox are installed on your
 machine. These are the download links for [vagrant][1] and [virtualbox][2].
-This software also requires ssh, wget, xz, rsync, GNU Make and gzip. Most
-systems come with these already installed. On Mac OSX you may need to install
-wget.
+This software also requires ssh, rsync, and GNU Make. If you are using Linux or
+Mac OSX these should already be installed.
 
 [1]: https://www.vagrantup.com/downloads.html
 [2]: https://www.virtualbox.org/wiki/Downloads
 
-## Quick Start
+## Quick start
 
-    ./script/bootstrap
     ./script/init
     make ssh
-    test_image nucleotides/velvet default
-
-## Boostrapping test data
-
-Your images can be tested with a small read library of 20000 pairs from
-Halovivax ruber. These are real reads from 2x150 sequencing on a HiSeq
-generated here at the JGI. Run the script:
-
-    ./script/bootstrap
-
-This will download the reads in xz format and recompress them into gz format.
-The gzipped reads will be placed in `mount/data`. Anything under the directory
-`mount` will be mounted and available in the virtual machine (VM).
+    biobox verify short_read_assembler bioboxes/velvet
 
 ## Launching the virtual machine
 
-The virtual machine is managed by Vagrant on top of the Virtual Box provider.
-The file `Vagrantfile` manages the virtual machine, however you do not need to
-understand this file unless you wish to change the CPU or memory settings of
-the VM. The VM can be started by running the following:
+The virtual machine is managed by Vagrant on top of the Virtual Box. The file
+`Vagrantfile` specifies the virtual machine, however you do not need to
+understand this file unless you wish to change the CPU or memory settings. The
+VM can be started by running the following:
 
     ./script/init
 
-This may take sometime as an Ubuntu base box will be downloaded first, and the
-VM is provisioned with Docker. Once this completes you will have a working VM
+This may take sometime as an Ubuntu base box will be downloaded first, and
+necessary packages are install. Once this completes you will have a working VM
 running Docker on your computer. You can now use this VM to build and test your
-Docker images.
+biobox Docker images. When you are finished with the VM you can turn it off
+with the command:
 
-## Testing a Docker assembler image
+    make down
+
+## Building and testing a Docker assembler image
 
 You can log into the VM with the following command:
 
     make ssh
 
-Once inside you can test running an assembler image:
+Once inside you can test an already existing biobox image as follows:
 
-    test_image nucleotides/velvet default
+    biobox verify short_read_assembler biobox/velvet
 
-This will pull the nucleotides velvet image from hub.docker.com and then run it
-on the test data downloaded and mounted in the image. The final lines of the
-output of the command will look something like:
+This uses the [biobox command line tool][tool] to verify that the biobox/velvet
+image conforms to the biobox specification.
 
-    .
-    .
-    .
-    [55.466016] Initial node count 11970
-    [55.466052] Removed 0 null nodes
-    [55.466060] Concatenation over!
-    [55.469276] Writing contigs into /tmp/tmp.y9ij5wVOyJ/contigs.fa...
-    [55.695997] Writing into stats file /tmp/tmp.y9ij5wVOyJ/stats.txt...
-    [55.730173] Writing into graph file /tmp/tmp.y9ij5wVOyJ/LastGraph...
-    [56.017854] Estimated Coverage cutoff = 6.334071
-    Final graph has 11970 nodes and n50 of 744, max 7802, total 3110693, using 0/400000 reads
-    + cp /tmp/tmp.y9ij5wVOyJ/contigs.fa /outputs/contigs.fa
-    + finish
-    ++ cat /tmp/tmp.CTFn9KMHqk/cidfile
-    + docker rm e7e87c9a9888e8fc07bc57fab75010635fb0c82bf210a101ed1eb4d4e4b0947f
-    e7e87c9a9888e8fc07bc57fab75010635fb0c82bf210a101ed1eb4d4e4b0947f
-    + echo /tmp/tmp.NSzIpSbLQ7
-    /tmp/tmp.NSzIpSbLQ7
+[tool]: https://github.com/bioboxes/command-line-interface
 
-This shows the output of the velvet assembler. The last line show the directory
-head the contigs were assembled. The following command can be run to confirm
-this:
+This will pull the [bioboxes/velvet][velvet] image from DockerHub and then test
+the image with various scenarios such as with both and invalid and valid input
+data. This produces no output when the image is valid, and returns an error
+message when the biobox is not valid.
 
-    head /tmp/tmp.NSzIpSbLQ7/contigs.fa
-
-    >NODE_2_length_314_cov_16.732485
-    GAGGTCGCGGCCGACGAGTTCGTCACCGTCGTCTCGCTCGCGATAGGCGACCACCGTCTC
-    GCCGTCGGACCCCATCGCCAACTCGCCGCTCGCGAGCGGGCCGGCGGCCGTGGGTTCGCC
-    AGTGGCGGCTTCGAGCGTCCCGACGTCGCGTCCGTCGGGCGGATACGCGAAGACGAGGCT
-    ATCGACGACGAGTGGATCGATACCCGATTTGGCACCGACCGCTCGCTCCCACGCGATCGA
-    CGGCTCACCATCGGGTCCGGAGCCGTCCGTCGCCGCAGTGTTTTCCGGGGTGGCCCGGTG
-    TAGCAGCCACTCGCCGTCGACTCGCTCGTCGA
-
-The name of the output directory will be different each time as this is a
-temporary directory.
+[velvet]: https://github.com/bioboxes/velvet
 
 ## Building your own Docker assembler image
 
-Most likely, you are reading this because you would like to build a Docker
-image of an assembler. This final part will guide you through the basics of
-building an assembler. Start by cloning the git repository for the same velvet
-image:
+Most likely, you are reading this because you would like to build a biobox
+Docker image. As an example of how to do this, this start by cloning the git
+repository for the [velvet assembler image][velvet]:
 
     mkdir tmp
     git clone https://github.com/nucleotides/docker-velvet tmp/velvet
     cd velvet
 
-This directory contains the `Dockerfile` required to build the velvet image. If
-you examine this file it contains instructions for building and installing
-velvet using the aptitude package manager. The file `run` is the instructions
-for running velvet inside the container. Run the following command to build the
-velvet image and tag it as 'my_image'
+This cloned directory contains the `Dockerfile` required to build the velvet
+image. If you examine this file it contains instructions for building and
+installing velvet inside a Docker image using the aptitude package manager. The
+file `assemble` is the instructions for running velvet inside the container.
+Run the following command to build the velvet image and tag it as 'my_image'
 
-    docker build -t 'my_image' .
+    docker build --tag 'my_image' .
 
-You should now see the new velvet image listed when you run the following
-command:
+You can now test that the built image is valid command as above, but using the
+name of this image:
 
-    docker images
-
-You can ssh into a container of your image to see the contents inside:
-
-    ssh_image my_image
-
-When you run this command you will be inside the container, so you can test to
-see that velvet is installed. For instance:
-
-    velvetg
-
-You can also see that the test reads are mounted in this container too:
-
-    ls /inputs
-
-Exit the container:
-
-    exit
-
-You can test that this container assembles the reads using the same command as
-previously, but with the name of your image:
-
-    test_image my_image default
-
-This will run the Docker image you just constructed against the test data.
+    biobox verify short_read_assembler my_image
 
 ## Troubleshooting
 
 If you are having problems build assembler images please consult the [Docker
-documentation][3] or you can ask questions on the [nucleotid.es mailing
-list][4].
+documentation][docker], the [bioboxes developer documentation][dev], or ask
+questions on the [bioboxes issue tracker][ghi].
 
-[3]: https://docs.docker.com/
-[4]: http://nucleotid.es/mailing-list/
+[dev]: http://bioboxes.org/guide/developer/
+[ghi]: https://github.com/bioboxes/rfc/issues
+[docker]: https://docs.docker.com/
