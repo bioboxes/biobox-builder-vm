@@ -10,15 +10,21 @@ install_docker(){
   sudo sh -c \
     "echo deb https://get.docker.io/ubuntu docker main \
     > /etc/apt/sources.list.d/docker.list"
-  sudo apt-get update -y
-  sudo apt-get install -y lxc-docker
+  sudo apt-get update --yes
+  sudo apt-get install --yes lxc-docker
   sudo gpasswd -a ${USER} docker
   sudo service docker restart
 }
 
 create_user(){
-  echo 'PATH="$PATH:/opt/docker_workshop/bin"' | sudo tee -a ${HOME}/.bashrc
+  echo 'PATH="$PATH:/opt/bioboxes/bin"' | sudo tee -a ${HOME}/.bashrc
+}
+
+install_biobox_cli(){
+  sudo apt-get install --yes python-pip
+  sudo pip install biobox_cli
 }
 
 install_docker
+install_biobox_cli
 create_user
