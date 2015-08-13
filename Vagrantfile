@@ -7,6 +7,6 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.memory = 12288
     v.cpus   = 2
-    v.name   = "JGI Docker Workshop VM"
+    v.name   = "Biobox Builder VM"
   end
 end
