@@ -23,9 +23,10 @@ create_user(){
 
 install_biobox_cli(){
   sudo apt-get install --yes python-pip
-  sudo pip install biobox_cli
+  pip install --user biobox_cli
+  echo 'PATH="$PATH:${HOME}/.local/bin"' >> ${HOME}/.bashrc
 }
 
 install_docker
-install_biobox_cli
 create_user
+install_biobox_cli
