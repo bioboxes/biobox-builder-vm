@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -o nounset
-
-CMD="make rsync"
-
-${CMD} && fswatch-run mount "${CMD}"

@@ -4,7 +4,7 @@ ssh_cfg := tmp/.ssh-config
 
 mount_dir := /opt/bioboxes/
 
-rsync := rsync -avz --exclude='.git/' -e "ssh -F $(ssh_cfg)"
+rsync := rsync -avz --quiet --exclude='.git*' -e "ssh -F $(ssh_cfg)"
 
 all:
 
@@ -20,8 +20,13 @@ init: up permissions rsync provision
 permissions: $(ssh_cfg)
 	ssh -F $(ssh_cfg) $(user) 'sudo mkdir -p $(mount_dir) && sudo chmod 770 $(mount_dir) && sudo chown vagrant:admin $(mount_dir)'
 
+auto_rsync: $(ssh_cfg)
+	@clear && make rsync
+	@fswatch -o ./mount | xargs -n 1 -I {} bash -c "clear && make rsync"
+
 rsync: $(ssh_cfg)
-	$(rsync) ./mount/bin  $(user):$(mount_dir)
+	$(rsync) ./mount/bin    $(user):$(mount_dir)
+	$(rsync) ./mount/home/* $(user):.
 
 provision: rsync
 	ssh -F $(ssh_cfg) $(user) '$(mount_dir)/bin/provision'
