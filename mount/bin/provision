@@ -18,6 +18,7 @@ install_docker(){
 
 create_user(){
   echo 'PATH="$PATH:/opt/bioboxes/bin"' | sudo tee -a ${HOME}/.bashrc
+  touch ${HOME}/.hushlogin
 }
 
 install_biobox_cli(){
