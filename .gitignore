@@ -1,4 +1,4 @@
 .vagrant
 tmp
 mount/data
-mount/tmp
+mount/home

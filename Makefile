@@ -2,35 +2,51 @@ tmp_dir := tmp
 user    := vagrant@default
 ssh_cfg := tmp/.ssh-config
 
-data_url := 'https://www.dropbox.com/s/hcquyvihmy0cpy7/reads.fq.xz?dl=1'
+mount_dir := /opt/bioboxes/
+
+rsync := rsync -avz --quiet --exclude='.git*' -e "ssh -F $(ssh_cfg)"
 
 all:
 
-mount/tmp:
-	mkdir -p $@
-
 #######################################
 #
-# Fetch data for testing images
+# Provisioning the VM
 #
 #######################################
 
-$(tmp_dir)/reads.fq.xz:
-	mkdir -p $(dir $@)
-	wget \
-		--quiet \
-		--output-document $@ \
-		$(data_url)
+# This task will launch and provision the VM
+init: up permissions rsync provision
 
-mount/data/reads.fq.gz: $(tmp_dir)/reads.fq.xz
-	mkdir -p $(dir $@)
-	xzcat $< | gzip > $@
+permissions: $(ssh_cfg)
+	ssh -F $(ssh_cfg) $(user) 'sudo mkdir -p $(mount_dir) && sudo chmod 770 $(mount_dir) && sudo chown vagrant:admin $(mount_dir)'
 
-bootstrap: mount/data/reads.fq.gz mount/tmp
+auto_rsync: $(ssh_cfg)
+	@clear && make rsync
+	@fswatch -o ./mount | xargs -n 1 -I {} bash -c "clear && make rsync"
+
+rsync: $(ssh_cfg)
+	$(rsync) ./mount/bin    $(user):$(mount_dir)
+	$(rsync) ./mount/home/* $(user):.
+
+provision: rsync
+	ssh -F $(ssh_cfg) $(user) '$(mount_dir)/bin/provision'
 
 #######################################
 #
-# Launching the vagrant instance
+# Connecting to the VM
+#
+#######################################
+
+ssh: $(ssh_cfg)
+	ssh -F $(ssh_cfg) $(user)
+
+$(ssh_cfg):
+	vagrant ssh-config | grep -v WARNING > $@
+	chmod 400 $@
+
+#######################################
+#
+# Stopping and starting the VM
 #
 #######################################
 
@@ -45,24 +61,4 @@ down:
 	vagrant destroy --force
 	rm -f $(ssh_cfg) $(tmp_dir)/.instance
 
-#######################################
-#
-# Connecting to the instance
-#
-#######################################
-
-ssh: $(ssh_cfg)
-	ssh -F $(ssh_cfg) $(user)
-
-$(ssh_cfg):
-	vagrant ssh-config | grep -v WARNING > $@
-	chmod 400 $@
-
-rsync: $(ssh_cfg)
-	rsync -avz --exclude='.git/' -e "ssh -F $(ssh_cfg)" ./mount/* $(user):.
-
-provision: rsync
-	ssh -F $(ssh_cfg) $(user) './bin/provision'
-
-# This task will launch and provision the instance
-init: up rsync provision
+.PHONY: init ssh provision rsync up down
